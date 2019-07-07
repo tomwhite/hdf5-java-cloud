@@ -1,4 +1,7 @@
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
+package org.lasersonlab.singlecell.hdf5
+
+import org.apache.spark.SparkContext
+import org.apache.spark.mllib.linalg.{ Vector, Vectors }
 
 import scala.math.log1p
 
@@ -27,19 +30,22 @@ import scala.math.log1p
 // [5,] 7.419181 7.824446 8.112028 7.601402 8.517393
 // [6,] .        7.824446 7.014015 .        8.517393
 
-def logNormalize(vec: Vector, scaleFactor: Double = 1e4): Vector = {
-  val sum = vec.toArray.sum
-  Vectors.dense(vec.toArray.map(v => log1p(v / sum * scaleFactor)))
+object toy {
+  def logNormalize(vec: Vector, scaleFactor: Double = 1e4): Vector = {
+    val sum = vec.toArray.sum
+    Vectors.dense(vec.toArray.map(v => log1p(v / sum * scaleFactor)))
+  }
+
+  val data = Array(
+    Vectors.dense(Array(2.0, 2.0, 1.0, 0.0, 1.0, 0.0)),
+    Vectors.dense(Array(0.0, 0.0, 0.0, 2.0, 1.0, 1.0))
+  )
+
+  def apply(implicit sc: SparkContext) = {
+    val rows = sc.parallelize(data)
+    var normalized = rows.map(logNormalize(_))
+
+    rows.foreach(println(_))
+    normalized.foreach(println(_))
+  }
 }
-
-val data = Array(
-  Vectors.dense(Array(2.0, 2.0, 1.0, 0.0, 1.0, 0.0)),
-  Vectors.dense(Array(0.0, 0.0, 0.0, 2.0, 1.0, 1.0))
-)
-
-val rows = sc.parallelize(data)
-var normalized = rows.map(logNormalize(_))
-
-rows.foreach(println(_))
-normalized.foreach(println(_))
-
